@@ -8,9 +8,9 @@
 let accountList = [];
 let recycleBin = {
     bin: [],
-    isInRecycleBin(query){
-        for(item in recycleBin.bin){
-            if(recycleBin.bin[item].url == query.url){
+    isInRecycleBin(query) {
+        for (item in recycleBin.bin) {
+            if (recycleBin.bin[item].url == query.url) {
                 return true
             }
         }
@@ -70,111 +70,149 @@ let addRunButton = function () {
 }
 
 let run = function () {
-    //check if logged out
-    //if not logs out
+    window.fbAsyncInit = function () {
+        FB.init({
+            appId: '225023618130869',
+            autoLogAppEvents: true,
+            xfbml: true,
+            version: 'v3.0'
+        });
 
-    let getNewsArticles = function () {
-        // return $.ajax({
-        //     url: `https://newsapi.org/v2/everything?q=chicag-cubs&sortBy=publishedAt&apiKey=1b6bb48e27d347cebbc57acd57f7bb3d`,
-        //     method: "GET",
-        // })
-    }
 
-    let getGroupPosts = function (myAccessToken) {
-        // return $.ajax({
-        //     url: `https://graph.facebook.com/766394103749626/feed/?redirect=false&access_token=${myAccessToken}`,
-        //     method: "GET",
-        // })
-    }
 
-    let selectPost = function () {
-        for (let i = 0; i < myNewsArticles.length; i++) {
-            let match = false;
-            for (let j = 0; j < myGroupPosts.length; j++) {
-                if (myNewsArticles[i].description.includes(myGroupPosts[j].description) ||myGroupPosts[j].description.includes(myNewsArticles[i].description)) {
-                    match = true
+        FB.getLoginStatus(function (response) {
+            if (response.status == "connected") {
+                FB.logout(function (response) {
+                    run();
+                });
+            } else {
+                let getNewsArticles = function () {
+                    // return $.ajax({
+                    //     url: `https://newsapi.org/v2/everything?q=chicag-cubs&sortBy=publishedAt&apiKey=1b6bb48e27d347cebbc57acd57f7bb3d`,
+                    //     method: "GET",
+                    // })
                 }
+
+                let getGroupPosts = function (myAccessToken) {
+                    // return $.ajax({
+                    //     url: `https://graph.facebook.com/766394103749626/feed/?redirect=false&access_token=${myAccessToken}`,
+                    //     method: "GET",
+                    // })
+                }
+
+                let selectPost = function () {
+                    for (let i = 0; i < myNewsArticles.length; i++) {
+                        let match = false;
+                        for (let j = 0; j < myGroupPosts.length; j++) {
+                            if (myNewsArticles[i].description.includes(myGroupPosts[j].description) || myGroupPosts[j].description.includes(myNewsArticles[i].description)) {
+                                match = true
+                            }
+                        }
+                        if (recycleBin.isInRecycleBin(myNewsArticles[i])) {
+                            match = true;
+                        }
+                        if (match == false) {
+                            return myNewsArticles[i]
+                        }
+                    }
+
+                }
+
+                let formatPost = function (postObj) {
+                    let formattedPost = "";
+
+                    formattedPost = {
+                        message: postObj.description,
+                        url: postObj.url,
+                    }
+
+                    return formattedPost;
+                }
+
+                let makePost = function (myPost) {
+                    console.log("post", myPost);
+                    // return $.ajax({
+                    //     url: `https://graph.facebook.com/766394103749626/feed/?redirect=false&access_token=${myAccessToken}`,
+                    //     method: "POST",
+                    //     data: {
+                    //     message: myPost.description,
+                    //     url: myPost.URL
+                    // }
+                    // })
+                    recycleBin.bin.push(myPost)
+                }
+
+                let myNewsArticles = [];
+                let myGroupPosts = [];
+                Promise.all([getNewsArticles(), getGroupPosts()]).then((newsArticles, groupPosts) => {
+                    console.log("Call returned: ", newsArticles, groupPosts)
+                    //myNewsArticles = newsArticles[0].articles;
+                    //myGroupPosts = groupPosts;
+                    /*-----Dummy data-------*/
+                    myNewsArticles = [
+                        {
+                            author: "Origo",
+                            description: "Exkluzív vetítést hirdetett az Uránia.",
+                            publishedAt: "2017-10-20T15:52:00Z",
+                            source: { id: null, name: "Origo.hu" },
+                            title: "Örülhetnek a Pearl Jam rajongók",
+                            url: "http://www.origo.hu/filmklub/20171020-exkluziv-vetitest-hirdetett-az-urania.html",
+                            urlToImage: "http://static.origos.hu/s/img/share_default_images/o_origo.png"
+                        },
+                        {
+                            author: "Malikae",
+                            description: "zippy do",
+                            publishedAt: "2017-10-11T22:50:37Z",
+                            source: { id: null, name: "Ibm.com" },
+                            title: "Nationals vs Cubs Live Stream, watch Nationals vs Cubs Free online MLB TV Reddit",
+                            url: "https://www.ibm.com/developerworks/community/blogs/Wce085e09749a_4650_a064_bb3f3b738fa3/entry/df736fdhs7383df",
+                            urlToImage: null
+                        },
+                        {
+                            author: "Malikae",
+                            description: "different",
+                            publishedAt: "2017-10-11T22:50:37Z",
+                            source: { id: null, name: "Ibm.com" },
+                            title: "Nationals vs Cubs Live Stream, watch Nationals vs Cubs Free online MLB TV Reddit",
+                            url: "https://www.ibm.com/differentoperworks/community/blogs/Wce085e09749a_4650_a064_bb3f3b738fa3/entry/df736fdhs7383df",
+                            urlToImage: null
+                        },
+                    ]
+                    myGroupPosts = [
+                        {
+                            description: "Heyo"
+                        }
+                    ]
+                    /*----------------------*/
+
+                    for (let i = 0; i < accountList.length; i++) {
+                        FB.login(function(response) {
+                            console.log(response)
+                          }, {scope: 'email,user_likes'});
+
+                        makePost(selectPost())
+
+                        //logout();
+                    }
+                })
+
+
+
+                isComplete();
+
+
             }
-            if(recycleBin.isInRecycleBin(myNewsArticles[i])){
-                match = true;
-            }
-            if (match == false) {
-                return myNewsArticles[i]
-            }
-        }
+        })
+    };
 
-    }
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) { return; }
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/en_US/sdk.js";  //or use "https://connect.facebook.net/en_US/sdk/debug.js"
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
 
-    let formatPost = function (postObj) {
-        let formattedPost = "";
-
-        formattedPost = {
-            message: postObj.description,
-            url: postObj.url,
-        }
-
-        return formattedPost;
-    }
-
-    let makePost = function (myPost) {
-        console.log("post", myPost);
-        // return $.ajax({
-        //     url: `https://graph.facebook.com/766394103749626/feed/?redirect=false&access_token=${myAccessToken}`,
-        //     method: "POST",
-        //     data: {
-        //     message: myPost.description,
-        //     url: myPost.URL
-        // }
-        // })
-        //recycleBin.bin.push(myPost)
-    }
-
-    let myNewsArticles = [];
-    let myGroupPosts = [];
-    Promise.all([getNewsArticles(), getGroupPosts()]).then((newsArticles, groupPosts) => {
-        console.log("Call returned: ", newsArticles, groupPosts)
-        //myNewsArticles = newsArticles[0].articles;
-        //myGroupPosts = groupPosts;
-        /*-----Dummy data-------*/
-        myNewsArticles = [
-            {
-                author: "Origo",
-                description: "Exkluzív vetítést hirdetett az Uránia.",
-                publishedAt: "2017-10-20T15:52:00Z",
-                source: { id: null, name: "Origo.hu" },
-                title: "Örülhetnek a Pearl Jam rajongók",
-                url: "http://www.origo.hu/filmklub/20171020-exkluziv-vetitest-hirdetett-az-urania.html",
-                urlToImage: "http://static.origos.hu/s/img/share_default_images/o_origo.png"
-            },
-            {
-                author: "Malikae",
-                description: "zippy do",
-                publishedAt: "2017-10-11T22:50:37Z",
-                source: { id: null, name: "Ibm.com" },
-                title: "Nationals vs Cubs Live Stream, watch Nationals vs Cubs Free online MLB TV Reddit",
-                url: "https://www.ibm.com/developerworks/community/blogs/Wce085e09749a_4650_a064_bb3f3b738fa3/entry/df736fdhs7383df",
-                urlToImage: null
-            }
-        ]
-        myGroupPosts = [
-            {
-                description: "Exkluzív vetítést hirdetett"
-            }
-        ]
-        /*----------------------*/
-
-        for (let i = 0; i < accountList.length; i++) {
-            //login();
-
-            makePost(selectPost())
-
-            //logout();
-        }
-    })
-
-
-
-    isComplete();
 }
 
 let addNewAccountButton = function () {
