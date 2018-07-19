@@ -1,243 +1,115 @@
-/*------------------------------------------------------------------------
-  Thanks for using my utility :)
-  Trying to make more pure functions
-  ------------------------------------------------------------------------*/
+//I want to radically change the functionality of this projects
+//because of the restrictions FB has, but I don't want to delete my old
+//code, so I'm keeping it and starting this new file
 
-//Library
 
-let accountList = [];
-let recycleBin = {
-    bin: [],
-    isInRecycleBin(query) {
-        for (item in recycleBin.bin) {
-            if (recycleBin.bin[item].url == query.url) {
-                return true
-            }
-        }
-        return false
-    }
-}
+window.fbAsyncInit = function () {
+    FB.init({
+        appId: '225023618130869',
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: 'v3.0'
+    });
 
-let loadLocal = function () {
-    if (localStorage.getItem('myCubsAccountList') !== null) {
-        accountList = JSON.parse(localStorage.getItem('myCubsAccountList'));
-    }
-}
+    console.log("check")
 
-let saveLocal = function (accountList) {
-    localStorage.setItem('myCubsAccountList', JSON.stringify(accountList));
-}
+    newsFunction();
+    setTimeout(login(), 3000);
 
-let makeNewAccountPrompt = function () {
-    var text;
-    var username = prompt("New account username");
-    var password = prompt("New account password");
 
-    accountList.push({ username, password })
-    saveLocal(accountList);
-    displayAccounts();
-}
+};
 
-let displayAccounts = function () {
-    if ($("#accountsDiv")[0] === undefined) {
-        $("#content").append($("<div>").attr("id", "accountsDiv"))
-    }
+(function (d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) { return; }
+    js = d.createElement(s); js.id = id;
+    js.src = "https://connect.facebook.net/en_US/sdk.js";  //or use "https://connect.facebook.net/en_US/sdk/debug.js"
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
 
-    $("#accountsDiv").html("");
 
-    for (let i = 0; i < accountList.length; i++) {
-        $("#accountsDiv").append(
-            $("<div>").attr("id", `accountDiv${i}`).addClass("accountDiv").append(
-                $("<p>").text(`${accountList[i].username}`).addClass("accountName"),
-                $("<p>").attr("id", i).text("X").addClass("accountDelete").on("click", function () {
-                    deleteAccount(event.target.id);
-                    displayAccounts();
-                })
-            )
-        )
-    }
-}
+let newsFunction = function () {
+    newObj = {};
 
-let deleteAccount = function (index) {
-    accountList.splice(parseInt(index), 1);
-    saveLocal(accountList);
-}
+    let newsApiKey = "1b6bb48e27d347cebbc57acd57f7bb3d";
 
-let addRunButton = function () {
     $("#content").append(
-        $("<button>").attr("type", "button").text("run").on("click", run)
+        $("<br>"),
+        $("<input>").attr("type", "text").attr("id", "searchField").attr("placeholder", "Search Key words"),
+        $("<button>").attr("type", "button").text("Search").attr("id", "searchButton").on("click", function () {
+            $("#resultsDiv").html("")
+            newsObj = {};
+
+            let query = $("#searchField").val();
+            query = query.split(" ").join("-")
+
+
+            $.ajax({
+                url: `https://newsapi.org/v2/everything?q=${query}&sortBy=publishedAt&apiKey=${newsApiKey}`,
+                method: "GET",
+            }).then(results => {
+                console.log("search results: ", results)
+                newsObj = results;
+                for (let i = 0; i < results.articles.length; i++) {
+
+                    $("#content").append(
+                        $("<article>").attr("id", `article${i}`).append(
+                            $("<h2>").text(`Author: ${results.articles[i].title}`),
+                            $("<p>").text(`Author: ${results.articles[i].author}`),
+                            $("<p>").text(`Description: ${results.articles[i].description}`),
+                            $("<p>").text(`Pubdate: ${results.articles[i].publishedAt}`),
+                            $("<p>").text(`Source: ${results.articles[i].source.name}`),
+                            $("<p>").text(`URL: ${results.articles[i].url}`),
+                            $("<img>").attr("src", `${results.articles[i].urlToImage}`),
+                            $("<button>").attr("id", i).text("Post").on("click", function () {
+                                postToFeed(newsObj.articles[event.target.id]),
+                                    $(`#article${event.target.id}`).remove();
+                            })
+
+                        )
+                    )
+                }
+
+
+
+
+            })
+        }),
+        $("<br>"),
+        $("<br>")
     )
 }
 
-let run = function () {
-    window.fbAsyncInit = function () {
-        FB.init({
-            appId: '225023618130869',
-            autoLogAppEvents: true,
-            xfbml: true,
-            version: 'v3.0'
+let myAccessToken = "";
+
+
+let login = function () {
+
+    FB.login(function (response) {
+        myAccessToken = response.authResponse.accessToken
+    },
+        {
+            scope: 'user_friends, user_posts, groups_access_member_info, publish_to_groups',
+            return_scopes: true
         });
-
-
-
-        FB.getLoginStatus(function (response) {
-            if (response.status == "connected") {
-                FB.logout(function (response) {
-                    run();
-                });
-            } else {
-                let getNewsArticles = function () {
-                    // return $.ajax({
-                    //     url: `https://newsapi.org/v2/everything?q=chicag-cubs&sortBy=publishedAt&apiKey=1b6bb48e27d347cebbc57acd57f7bb3d`,
-                    //     method: "GET",
-                    // })
-                }
-
-                let getGroupPosts = function (myAccessToken) {
-                    // return $.ajax({
-                    //     url: `https://graph.facebook.com/766394103749626/feed/?redirect=false&access_token=${myAccessToken}`,
-                    //     method: "GET",
-                    // })
-                }
-
-                let selectPost = function () {
-                    for (let i = 0; i < myNewsArticles.length; i++) {
-                        let match = false;
-                        for (let j = 0; j < myGroupPosts.length; j++) {
-                            if (myNewsArticles[i].description.includes(myGroupPosts[j].description) || myGroupPosts[j].description.includes(myNewsArticles[i].description)) {
-                                match = true
-                            }
-                        }
-                        if (recycleBin.isInRecycleBin(myNewsArticles[i])) {
-                            match = true;
-                        }
-                        if (match == false) {
-                            return myNewsArticles[i]
-                        }
-                    }
-
-                }
-
-                let formatPost = function (postObj) {
-                    let formattedPost = "";
-
-                    formattedPost = {
-                        message: postObj.description,
-                        url: postObj.url,
-                    }
-
-                    return formattedPost;
-                }
-
-                let makePost = function (myPost) {
-                    console.log("post", myPost);
-                    // return $.ajax({
-                    //     url: `https://graph.facebook.com/766394103749626/feed/?redirect=false&access_token=${myAccessToken}`,
-                    //     method: "POST",
-                    //     data: {
-                    //     message: myPost.description,
-                    //     url: myPost.URL
-                    // }
-                    // })
-                    recycleBin.bin.push(myPost)
-                }
-
-                let myNewsArticles = [];
-                let myGroupPosts = [];
-                Promise.all([getNewsArticles(), getGroupPosts()]).then((newsArticles, groupPosts) => {
-                    console.log("Call returned: ", newsArticles, groupPosts)
-                    //myNewsArticles = newsArticles[0].articles;
-                    //myGroupPosts = groupPosts;
-                    /*-----Dummy data-------*/
-                    myNewsArticles = [
-                        {
-                            author: "Origo",
-                            description: "Exkluzív vetítést hirdetett az Uránia.",
-                            publishedAt: "2017-10-20T15:52:00Z",
-                            source: { id: null, name: "Origo.hu" },
-                            title: "Örülhetnek a Pearl Jam rajongók",
-                            url: "http://www.origo.hu/filmklub/20171020-exkluziv-vetitest-hirdetett-az-urania.html",
-                            urlToImage: "http://static.origos.hu/s/img/share_default_images/o_origo.png"
-                        },
-                        {
-                            author: "Malikae",
-                            description: "zippy do",
-                            publishedAt: "2017-10-11T22:50:37Z",
-                            source: { id: null, name: "Ibm.com" },
-                            title: "Nationals vs Cubs Live Stream, watch Nationals vs Cubs Free online MLB TV Reddit",
-                            url: "https://www.ibm.com/developerworks/community/blogs/Wce085e09749a_4650_a064_bb3f3b738fa3/entry/df736fdhs7383df",
-                            urlToImage: null
-                        },
-                        {
-                            author: "Malikae",
-                            description: "different",
-                            publishedAt: "2017-10-11T22:50:37Z",
-                            source: { id: null, name: "Ibm.com" },
-                            title: "Nationals vs Cubs Live Stream, watch Nationals vs Cubs Free online MLB TV Reddit",
-                            url: "https://www.ibm.com/differentoperworks/community/blogs/Wce085e09749a_4650_a064_bb3f3b738fa3/entry/df736fdhs7383df",
-                            urlToImage: null
-                        },
-                    ]
-                    myGroupPosts = [
-                        {
-                            description: "Heyo"
-                        }
-                    ]
-                    /*----------------------*/
-
-                    for (let i = 0; i < accountList.length; i++) {
-                        FB.login(function(response) {
-                            console.log(response)
-                          }, {scope: 'email,user_likes'});
-
-                        makePost(selectPost())
-
-                        //logout();
-                    }
-                })
-
-
-
-                isComplete();
-
-
-            }
-        })
-    };
-
-    (function (d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) { return; }
-        js = d.createElement(s); js.id = id;
-        js.src = "https://connect.facebook.net/en_US/sdk.js";  //or use "https://connect.facebook.net/en_US/sdk/debug.js"
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-
 }
 
-let addNewAccountButton = function () {
-    $("#content").append(
-        $("<button>").attr("type", "button").text("Add new account").on("click", makeNewAccountPrompt)
-    )
+
+let postToFeed = function (article) {
+    console.log(article)
+    $.ajax({
+        url: `https://graph.facebook.com/766394103749626/feed
+        ?message=${article.title}
+
+        ${article.description}
+
+        &link=${article.url}
+
+        &access_token=${myAccessToken}`,
+        method: "POST"
+    })
+    .then(results =>{
+        console.log(results)
+    })
+
 }
-
-let isComplete = function () {
-    $("#content").append(
-        $("<p>").text("Complete!")
-    )
-}
-
-//Body
-
-loadLocal();
-
-if (accountList[0] === undefined) {
-    makeNewAccountPrompt();
-}
-
-displayAccounts(accountList);
-
-addNewAccountButton();
-
-addRunButton();
-

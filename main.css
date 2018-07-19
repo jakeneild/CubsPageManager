@@ -1,27 +1,9 @@
-.accountDiv{
-    height: 50px;
-    width: 200px;
-    display: flex;
-    margin: 1em;
-    padding: .2em;
-    border: 2px solid black;
-    border-radius: 5px;
-    box-shadow: 5px 10px;
+article {
+    margin: 2em;
+    border-left: 3px solid black;
 }
 
-.accountName{
-    width: 75%
-}
-
-.accountDelete{
-    margin: 0;
-    padding: 0;
-    width: auto;
-    font-size: 2.8em;
-    color: red;
-    height: 50px;
-}
-
-button {
-    margin-right: 2em
+img{
+    max-height: 500px;
+    max-width: 500px;
 }
